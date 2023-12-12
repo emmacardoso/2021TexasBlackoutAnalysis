@@ -1,0 +1,196 @@
+---
+title: "2021 Texas Power Blackout Analysis"
+author: "Emma Cardoso"
+date: "2023-12-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+In February 2021, three severe winter storms swept across the United States. These storms took place between February 10-11, 13-17, and 15-20. These extreme storms were especially detrimental in the state of Texas, causing a massive electricity generation failure that resulted in a loss of power for over 4.5 million homes.[^utexas]
+
+Given the sheer volume and destruction of these storms and the devastation that ensued, this analysis aims to investigate the number of homes that lost power during the February 2021 storms. Remotely-sensed night light data for Houston, Texas on February 7, 2021 and February 16, 2021 were examined to detect differences in night light intensity, thereby aiding to identify areas that lost electric power as a result of these storms. Additionally, data from the US Census Bureau will be used in conjunction to night light data in order to address if socioeconomic factors can serve as predictors influencing communities' recovery to loss of power. 
+
+### Goals
+The goal of this analysis is to use remotely-sensed night light data to identify the number of homes in the Houston Metropolitan area that experienced power loss as a result of the February 2021 winter storms, and to investigate if socioeconomic factors can serve as an indication regarding how communities' recover from loss of power. 
+
+### Data
+#### Night Lights
+To analyze the effects of the February 2021 storms in Houston, Texas, remote sensing night light data from the Visible Infrared Imaging Radiometer Suite (VIIRS) onboard the Suomi satellite will be used. This data is distrbuted through Nasa's [Level-1 and Atmospheric Archive & Distribution System Distributed Active Archive Center (LAADS DAAC)](https://ladsweb.modaps.eosdis.nasa.gov/), where tiles are identified based upon their horizontal and vertical positioning in the grid. As our area of interest, Houston, Texas, falls on the border of tiles h08v05 and h08v06, we will use both of these tiles to extract relevant data.
+
+An issue that arises with remote sensing data is that environmental factors, such as cloud cover, often hinder VIIRS data from being useful. While persistent cloud cover in the Houston area did affect the ability to obtain clear and useful night light data for several days during the February 2021 storm, data from 2021-02-07 (before the storm) and 2021-02-16 (after/during the storm) provided clear night light images, allowing for the visualization of the extent of power outage in Houston, Texas during this time. 
+
+As the Houston area falls on the border of two VIIRS tiles, two tiles per data will be utilized in this investigation, all which are stored in the `VNP46A1` folder:\
+
+-   `VNP46A1.A2021038.h08v05.001.2021039064328.h5.tif`: tile h08v05, collected on 2021-02-07  
+-   `VNP46A1.A2021038.h08v06.001.2021039064329.h5.tif`: tile h08v06, collected on 2021-02-07  
+-   `VNP46A1.A2021047.h08v05.001.2021048091106.h5.tif`: tile h08v05, collected on 2021-02-16  
+-   `VNP46A1.A2021047.h08v06.001.2021048091105.h5.tif`: tile h08v06, collected on 2021-02-16  
+
+#### Roads
+As the concentration of cars on highways illuminate these regions during the night, highways make up a significant portion of night light data observed from remote sensing regimes. Thus, as we are interested in visualizing the difference in night lights before and after the storm as a means of identifying areas that lost electric power, it is imperative that we do not falsely identify highways with reduced traffic as areas experiencing power outages. To ensure this, areas near highways will be omitted from this analysis.
+
+[Geofabrik's download sites](https://download.geofabrik.de/) extracts and redistributes data from the OpenStreetMap project for public download. Geofabrik was used to download a shapefile of all highways in Texas, and from this a GeoPackage (`.gpkg` file) was created that contains only the subset of roads that intersect with the Houston metropolitan area. 
+
+- `gis_osm_roads_free_1.gpkg`
+
+#### Houses
+As we are interested in determining the number of homes that lost power during the February 2021 storms, building data was downloaded from Geofabrik and another GeoPackage containing only data on houses in the Houston area was prepared. 
+
+- `gis_osm_buildings_a_free_1.gpkg`
+
+#### Socioeconomic 
+Though unable to readily access socioeconomic data for every home in the Houston area, we were able to obtain data regarding 2019 census tracts from the United States Census Bureau's American Community Survey. This data is an ArcGIS file geodatabase, contained in the *folder* `ACS_2019_5YR_TRACT_48.gdb`, and includes both spatial data and demographic data. 
+
+[^utexas]: The University of Texas at Austin, Energy Institute. 2021. "The Timeline and Events of the February 2021 Texas Electric Grid Blackouts." July 2021. https://energy.utexas.edu/research/ercot-blackout-2021#:~:text=The%20Timeline%20and%20Events%20of,more%20than%204.5%20million%20homes.
+
+
+## Data Analysis Workflow
+
+```{r loading, message=FALSE, warning=FALSE}
+#loading in libraries ----------
+
+library(raster)
+library(sp)
+library(terra)
+library(dplyr)
+library(sf)
+library(stars)
+library(ggplot2) 
+library(ggspatial)
+library(stringr)
+
+```
+
+### Finding the Number of Homes in Houston, Texas affected by the February 2021 Blackout
+
+In order to identify the number of homes in the Houston Metropolitan area that were affected by the power outages resulting from the winter storms in February 2021, we need to: 1) identify blackout locations, and 2) identify homes within blackout locations.
+
+#### Part 1 : Identifying blackout locations
+
+To identify which areas in Houston, Texas experienced blackouts, we will begin by using the remotely-sensed night light data collected on 2021-02-07 and 2021-02-16 to find the change in night light intensity between these two dates. This change in night light intensity is presumably caused by the storm. 
+
+This will be achieved by : 
+- combining the two VIIRS tiles for each date into a single `stars` object, resulting in two stars objects, one for each date
+- finding the change in night light intensity between these two star objects, and creating a raster depicting this difference in night light intensity 
+- reclassifying this difference raster to identify blackout areas, where areas that experienced a drop greater than 200 nW cm^-2^sr^-1^ have experienced a blackout, and locations that experienced a drop less than 200 nW cm^-2^sr^-1^ will be assigned `NA`
+
+Once the blackout regions within the original VIIRS tiles have been identified, this blackout mask will be vectorized and cropped to the region of interest, the Houston, Texas Metropolitan area. Furthermore, once we have blackout data for the specific region of interest, highway data will be used to create a buffer, identifying areas within 200m, so we can then identify areas that experienced blackouts that are *further* than 200m from Houston highways. This is important as it will ensure that highways that experienced reduced traffic during this time are not falsely categorized as regions experiencing loss of power. 
+
+
+##### Combining VIIRS data into single star objects 
+```{r message=FALSE, warning=FALSE, include=TRUE, label='P1 combining star data'}
+#reading in night light tiles and combining each date into a singular `stars` object ----------
+
+#reading in light tiles and turning them into rasters, and then turning them into stars
+light07_1rast <- rast("./VNP46A1/VNP46A1.A2021038.h08v05.001.2021039064328.tif")
+light07_1stars <- st_as_stars(light07_1rast)
+
+light07_2rast <- rast("./VNP46A1/VNP46A1.A2021038.h08v06.001.2021039064329.tif")
+light07_2stars <- st_as_stars(light07_2rast)
+
+light16_1rast <- rast("./VNP46A1/VNP46A1.A2021047.h08v06.001.2021048091105.tif")
+light16_1stars <- st_as_stars(light16_1rast)
+
+light16_2rast <- rast("./VNP46A1/VNP46A1.A2021047.h08v05.001.2021048091106.tif")
+light16_2stars <- st_as_stars(light16_2rast)
+
+
+
+#combining tiles into a single star object for both dates ----------
+
+stars07 <- st_mosaic(light07_1stars, light07_2stars)
+#plotting to check mosaic occurred correctly
+plot(stars07, main = "2021-02-07 Night Light Intensity in nW cm-2sr-1")
+
+#plotting to check mosaic occurred correctly
+stars16 <- st_mosaic(light16_1stars, light16_2stars)
+plot(stars16, main = "2021-02-16 Night Light Intensity in nW cm-2sr-1") 
+```
+
+##### Finding change in nightlight itensity and creating blackout mask 
+
+```{r, label= 'P1 change in night lights', include=TRUE}
+#finding difference in night lights intensity to create a blackout mask ----------
+
+difference <- (stars07 - stars16) #subtracting mosaic of the 16th from that of the 7th, to find the change in night light intensity 
+
+differencerast <- rast(difference) #turning difference into a raster
+
+#plotting difference rast to use for comparison when doing check for blackout mask 
+plot(differencerast, main = "Raster for Difference in Night Light Itensity") 
+
+
+
+#reclassifying the raster to find locations that experienced a drop of more than 200, assigning NA to all other locations -----------
+
+rcl <- matrix(c(-Inf, 200, 1,
+                200, Inf, NA), ncol = 3, byrow = TRUE) #creating a matrix for the blackout mask with our specified parameters
+
+blackoutmask <- classify(differencerast, rcl = rcl) #applying mask to raster
+
+#plotting blackout to ensure that mask was correctly applied
+plot(blackoutmask)
+title(main = c("Areas Experiencing a Drop in Night Light",
+               "Intensity Greater Than 200 nW cm-2sr-1"),
+      adj = .4,
+      line = 3,
+      cex.main = 1)
+```
+##### Cropping to region of interest
+```{r include=TRUE, label='P1 vectorizing mask and cropping to region of interest'}
+#vectorizing blackout mask ----------
+
+blackoutstars <- st_as_stars(blackoutmask) #turning blackoutmask raster into a star object
+blackoutvector <- st_make_valid(st_as_sf(blackoutstars)) #turning the star object into a vector, and fixing an invalid geometries
+
+#plotting vector to check that operation occured successfully
+plot(blackoutvector, main = "")
+title(main = c("Vectorized Depiction of Areas Experiencing\na Drop in Night Light Intensity Greater Than 200 nW cm-2sr-1"),
+      adj = .4,
+      line = 2.2,
+      cex.main = 1)
+
+
+#cropping vectorized blackout to area of interest -----------
+
+#defining area of interest assigning a CRS -----------
+
+houston_matrix <- cbind(
+  x = c(-96.5, -96.5, -94.5, -94.5, -96.5),
+  y = c(29, 30.5, 30.5, 29, 29)) #defining coordinates
+
+houston_polygon <-st_polygon(list(houston_matrix)) #turning coordiantes into a polygon
+
+houston_sf <- st_sfc(houston_polygon) #converting polygon into a simple feature
+
+houston_sf <- st_set_crs(houston_sf, st_crs(blackoutvector)) #assigning the CRS of this simple feature to match CRS of blackout vector  
+
+#checking to make sure they have the same CRS!
+if (identical(st_crs(houston_sf), st_crs(blackoutvector))) {
+  print("Both data frames have the same coordinate reference system.")
+} else {
+  print("The data frames have different coordinate reference systems.")
+}
+
+
+#cropping blackout vector to regions of interest ------------
+
+houston_blackout_crop <- blackoutvector[houston_sf, , op = st_intersects] #cropping to region of interest
+
+houstonblackout <- st_transform(houston_blackout_crop, "EPSG:3083") #reprojecting to Texas
+
+#plotting to check that crop occured correctly and looks different than that of blackoutvector above
+plot(houstonblackout, main = "")
+title(main = c("Areas Experiencing Blackout in Houston, Texas between\n2021-02-07 and 2021-02-16"),
+      adj = .4,
+      line = 2.5,
+      cex.main = 1)
+```
+
+##### Excluding highways from blackout mask
+As the 
