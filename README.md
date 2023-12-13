@@ -11,7 +11,7 @@ In February 2021, the state of Texas faced severe electricity generation failure
 - *Building Data* : Geofabrik's dataset on OpenStreetMap buildings assists in identifying homes affected by power outages.
 - *Socioeconomic Data*: The United States Census Bureau's American Community Survey (ACS) 2019 furnishes demographic and socioeconomic data, specifically median income, at the census tract level.
 
-The data associated with this analysis is too large to include in the GitHub repo, however the zipped data can be downloaded [here](https://drive.google.com/file/d/1bTk62xwOzBqWmmT791SbYbHxnCdjmBtw/view?usp=sharing).
+The data associated with this analysis is too large to include in the GitHub repo, and thus were omitted using gitignore, however the zipped data can be downloaded [here](https://drive.google.com/file/d/1bTk62xwOzBqWmmT791SbYbHxnCdjmBtw/view?usp=sharing).
 
 ## Credit
 This analysis is based on materials developed by Ruth Oliver at UC Santa Barbara.
