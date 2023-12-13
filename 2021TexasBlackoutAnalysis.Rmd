@@ -48,6 +48,7 @@ Though unable to readily access socioeconomic data for every home in the Houston
 
 [^utexas]: The University of Texas at Austin, Energy Institute. 2021. "The Timeline and Events of the February 2021 Texas Electric Grid Blackouts." July 2021. https://energy.utexas.edu/research/ercot-blackout-2021#:~:text=The%20Timeline%20and%20Events%20of,more%20than%204.5%20million%20homes.
 
+credit : this analysis is based upon materials provided by Ruth Oliver, a professor within UC Santa Barbara's Bren Graduate School of Environmental Data Science. 
 
 ## Data Analysis Workflow
 
