@@ -16,4 +16,26 @@ The data associated with this analysis is too large to include in the GitHub rep
 ## Credit
 This analysis is based on materials developed by Ruth Oliver at UC Santa Barbara.
 
+## Repository and Zipped Data Contents
+
+<pre>
+    2021TexasBlackoutAnalysis
+    │   README.md
+    │   Rmd/Proj files
+    │   gitignore
+    │
+    └───VNP46A1
+         │
+         │   VNP46A1/.VNP46A1.A2021047.h08v06.001.2021048091105.tif
+         │   VNP46A1/.VNP46A1.A2021038.h08v06.001.2021039064329.tif
+         │   VNP46A1/.VNP46A1.A2021047.h08v05.001.2021048091106.tif
+         │   VNP46A1/.VNP46A1.A2021038.h08v05.001.2021039064328.tif
+    └───data
+        │
+        │   gis_osm_roads_free_1.gpkg
+        │   gis_osm_buildings_a_free_1.gpkg
+        └───ACS_2019_5YR_TRACT_48_TEXAS.gdb
+ 
+</pre>
+
 [^utexas]: The University of Texas at Austin, Energy Institute. 2021. "The Timeline and Events of the February 2021 Texas Electric Grid Blackouts." July 2021. https://energy.utexas.edu/research/ercot-blackout-2021#:~:text=The%20Timeline%20and%20Events%20of,more%20than%204.5%20million%20homes.
