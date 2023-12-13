@@ -6,6 +6,12 @@ This repository contains an RMarkdown document and associated R scripts for cond
 In February 2021, the state of Texas faced severe electricity generation failures during three consecutive winter storms occurring between February 10-11, 13-17, and 15-20. These extreme weather events resulted in widespread power outages affecting over 4.5 million homes[^utexas].This analysis employs remotley-sensed nightlight data from February 7, 2021, and February 16, 2021 to understand the extent of power loss experienced and to identify which homes experienced blackouts as a result of the storms. Furthermore, the analysis incorporates data from the US Census Bureau, synergizing socioeconomic factors with night light data. The primary objective is to explore if median income, as a socioeconomic indicator, can serve as a predictive factor influencing communities' recovery from power loss during the storms.
 
 ## Data
+- *Nightlight Data* : Night light data from the Visible Infrared Imaging Radiometer Suite (VIIRS) onboard the Suomi satellite and collected on 2021-02-07 (before the storm) and 2021-02-16 (after/during the storm) are utilizied
+- *Highways Data* : Geofabrik's OpenStreetMap-derived dataset provides information on highways in the Houston area.
+- *Building Data* : Geofabrik's dataset on OpenStreetMap buildings assists in identifying homes affected by power outages.
+- *Socioeconomic Data*: The United States Census Bureau's American Community Survey (ACS) 2019 furnishes demographic and socioeconomic data, specifically median income, at the census tract level.
+
+The data associated with this analysis is too large to include in the GitHub repo, however the zipped data can be downloaded [here](https://drive.google.com/file/d/1bTk62xwOzBqWmmT791SbYbHxnCdjmBtw/view?usp=sharing).
 
 ## Credit
 This analysis is based on materials developed by Ruth Oliver at UC Santa Barbara.
