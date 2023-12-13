@@ -117,24 +117,12 @@ plot(stars16, main = "2021-02-16 Night Light Intensity in nW cm-2sr-1")
 ```{r, label= 'P1 change in night lights', include=TRUE}
 #finding difference in night lights intensity to create a blackout mask ----------
 
-difference <- (stars07 - stars16) #subtracting mosaic of the 16th from that of the 7th, to find the change in night light intensity 
+difference <- (stars07 - stars16) #subtracting mosaic of the 16th from that of the 7th, and setting threshold to 200 to find the change in night light intensity 
 
-differencerast <- rast(difference) #turning difference into a raster
+difference[difference == FALSE] <- NA #assigning NA to all values that did not experience a drop in intensity greater than 200
 
-#plotting difference rast to use for comparison when doing check for blackout mask 
-plot(differencerast, main = "Raster for Difference in Night Light Itensity") 
-
-
-
-#reclassifying the raster to find locations that experienced a drop of more than 200, assigning NA to all other locations -----------
-
-rcl <- matrix(c(-Inf, 200, 1,
-                200, Inf, NA), ncol = 3, byrow = TRUE) #creating a matrix for the blackout mask with our specified parameters
-
-blackoutmask <- classify(differencerast, rcl = rcl) #applying mask to raster
-
-#plotting blackout to ensure that mask was correctly applied
-plot(blackoutmask)
+#plotting blackout to ensure that reclassification was correctly applied
+plot(difference, main = " ")
 title(main = c("Areas Experiencing a Drop in Night Light",
                "Intensity Greater Than 200 nW cm-2sr-1"),
       adj = .4,
@@ -147,8 +135,8 @@ Once the blackout mask is vectorized, we will crop it to the region of interst b
 ```{r include=TRUE, label='P1 vectorizing mask and cropping to region of interest'}
 #vectorizing blackout mask ----------
 
-blackoutstars <- st_as_stars(blackoutmask) #turning blackoutmask raster into a star object
-blackoutvector <- st_make_valid(st_as_sf(blackoutstars)) #turning the star object into a vector, and fixing an invalid geometries
+differencevector <- st_as_sf(difference) #turning difference into an sf object
+blackoutvector <- st_make_valid(differencevector) #fixing any invalid geometries of sf object
 
 #plotting vector to check that operation occured successfully
 plot(blackoutvector, main = "")
@@ -383,3 +371,5 @@ ggplot() +
 ```
 
 ## Results
+
+Upon plotting the median income distribution for census tracts impacted by the February 2021 storms in Houston, Texas, versus impacted tracts, socioeconomic disparities in blackout experience emerge. While overall median income range appears similar between impacted and unimpacted tracts, the histogram reveal notable distinctions in frequencies. Impacted tracts exhibit a higher frequency of lower median incomes, particularly in the 20,000-60,000 range, than impacted tracts. However it is important to consider that this data excluded areas within 200 meters of highways, which may inadvertently omit lower income census tracts, as proximity to highways is often associated with lower-cost housing. Another limitation to consider is that the night light data used to assess blackouts spans a 9-day gap due to cloud cover issues, meaning the nuanced dynamics of power restoration may not be captured, potentially leading to inaccuracies in identifying areas with persistent outages or rapid recovery. However, overall, the results of this study indicate that census tracts with lower median incomes were disproportionately affected by the blackout.
