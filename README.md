@@ -1,6 +1,6 @@
 # February 2021 Power Outage Analysis in Houston, Texas
 ## Overview
-This repository contains an RMarkdown document and associated R scripts for conducting a detailed analysis of the power blackouts that occurred in the Houston Metropolitan area during the severe winter storms in February 2021. Aside from determining which homes in the Houston area were affected by the loss of power caused by the storms, another large focus of this analysis is to investigate is socioeconmic factors, specifically median income, can serve as predictors regarding communities' recovery from loss of power. The analysis is accomplished using remotely-sensed night light data, providing a unique spatial perspective on the extent of power outages during the storms.
+This repository contains an RMarkdown document and associated R scripts for conducting a detailed analysis of the power blackouts that occurred in the Houston Metropolitan area during the severe winter storms in February 2021. Aside from determining which homes in the Houston area were affected by the loss of power caused by the storms, another large focus of this analysis is to investigate if socioeconmic factors, specifically median income, can serve as predictors regarding communities' recovery from loss of power. The analysis is accomplished using remotely-sensed night light data, providing a unique spatial perspective on the extent of power outages during the storms.
 
 ## Background
 In February 2021, the state of Texas faced severe electricity generation failures during three consecutive winter storms occurring between February 10-11, 13-17, and 15-20. These extreme weather events resulted in widespread power outages affecting over 4.5 million homes[^utexas].This analysis employs remotley-sensed nightlight data from February 7, 2021, and February 16, 2021 to understand the extent of power loss experienced and to identify which homes experienced blackouts as a result of the storms. Furthermore, the analysis incorporates data from the US Census Bureau, synergizing socioeconomic factors with night light data. The primary objective is to explore if median income, as a socioeconomic indicator, can serve as a predictive factor influencing communities' recovery from power loss during the storms.
@@ -14,7 +14,7 @@ In February 2021, the state of Texas faced severe electricity generation failure
 The data associated with this analysis is too large to include in the GitHub repo, and thus were omitted using gitignore, however the zipped data can be downloaded [here](https://drive.google.com/file/d/1bTk62xwOzBqWmmT791SbYbHxnCdjmBtw/view?usp=sharing).
 
 ## Credit
-This analysis is based on materials developed by Ruth Oliver at UC Santa Barbara.
+This analysis is based on materials developed by Ruth Oliver at UC Santa Barbara and was conducted as apart of the course EDS 223: Geospatial Analysis and Remote Sensing.
 
 ## Repository and Zipped Data Contents
 
